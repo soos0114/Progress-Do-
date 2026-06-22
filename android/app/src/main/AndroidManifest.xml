@@ -3,8 +3,8 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- ① 昇格（アプリ外で勝手にフルスクリーン着信）にする場合のみ -->
-    <!-- <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/> -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- 期限切れ時に、アプリ外やロック画面でも着信画面を表示する。 -->
 
     <application
         android:label="鬼詰Todo「進捗Do?」"
@@ -16,6 +16,8 @@
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">

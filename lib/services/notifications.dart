@@ -37,6 +37,7 @@ class Notifications {
         _plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     await androidImpl?.requestNotificationsPermission();
+    await androidImpl?.requestFullScreenIntentPermission();
     // Android 12+ の正確なアラーム許可（時刻ピッタリで鳴らすため）
     await androidImpl?.requestExactAlarmsPermission();
   }
@@ -50,7 +51,7 @@ class Notifications {
     priority: Priority.high,
     category: AndroidNotificationCategory.call,
     // ① に昇格するときは true（＋ USE_FULL_SCREEN_INTENT 権限）
-    fullScreenIntent: false,
+    fullScreenIntent: true,
     ongoing: false,
   );
 

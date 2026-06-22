@@ -90,9 +90,10 @@ class Notifications {
     }
   }
 
-  static void _routeToCall(String taskId) {
+  static Future<void> _routeToCall(String taskId) async {
     final task = appState.taskById(taskId);
     if (task == null) return;
+    if (!await appState.claimCall(taskId)) return;
     navigatorKey.currentState?.push(
       MaterialPageRoute(builder: (_) => IncomingCallScreen(task: task)),
     );

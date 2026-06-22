@@ -10,12 +10,14 @@ class Task {
   String title;
   DateTime due;
   bool done;
+  bool hasCalled;
 
   Task({
     required this.id,
     required this.title,
     required this.due,
     this.done = false,
+    this.hasCalled = false,
   });
 
   factory Task.create(String title, DateTime due) =>
@@ -37,6 +39,7 @@ class Task {
         'title': title,
         'due': due.toIso8601String(),
         'done': done,
+        'hasCalled': hasCalled,
       };
 
   factory Task.fromJson(Map<String, dynamic> j) => Task(
@@ -44,6 +47,7 @@ class Task {
         title: j['title'] as String,
         due: DateTime.parse(j['due'] as String),
         done: (j['done'] as bool?) ?? false,
+        hasCalled: (j['hasCalled'] as bool?) ?? false,
       );
 }
 

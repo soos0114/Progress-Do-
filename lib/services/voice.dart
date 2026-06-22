@@ -5,38 +5,52 @@ import '../data/script.dart';
 
 /// Handles the looping ringtone and scripted voice clips.
 class Voice {
-  static final AudioPlayer _ring = AudioPlayer();
-  static final AudioPlayer _speech = AudioPlayer();
+  // Ringtone and speech never need to overlap. Keeping them on one native
+  // player avoids audio-focus contention while answering a call.
+  static final AudioPlayer _player = AudioPlayer();
+  static int _requestId = 0;
 
   static Future<void> startRing() async {
+    final requestId = ++_requestId;
     try {
-      await _ring.setReleaseMode(ReleaseMode.loop);
-      await _ring.play(AssetSource('audio/${CallScript.ringtoneFile}'));
+      await _player.stop();
+      if (requestId != _requestId) return;
+      await _player.setReleaseMode(ReleaseMode.loop);
+      if (requestId != _requestId) return;
+      await _player.play(AssetSource('audio/${CallScript.ringtoneFile}'));
     } catch (error) {
       debugPrint('Failed to play ringtone: $error');
     }
   }
 
   static Future<void> stopRing() async {
+    ++_requestId;
     try {
-      await _ring.stop();
-    } catch (_) {}
+      await _player.stop();
+    } catch (error) {
+      debugPrint('Failed to stop ringtone: $error');
+    }
   }
 
   static Future<void> speak(String fileName) async {
+    final requestId = ++_requestId;
     try {
-      await _speech.stop();
-      await _speech.setReleaseMode(ReleaseMode.release);
-      await _speech.play(AssetSource('audio/$fileName'));
+      await _player.stop();
+      if (requestId != _requestId) return;
+      await _player.setReleaseMode(ReleaseMode.release);
+      if (requestId != _requestId) return;
+      await _player.play(AssetSource('audio/$fileName'));
     } catch (error) {
       debugPrint('Failed to play voice clip "$fileName": $error');
     }
   }
 
   static Future<void> stopAll() async {
-    await stopRing();
+    ++_requestId;
     try {
-      await _speech.stop();
-    } catch (_) {}
+      await _player.stop();
+    } catch (error) {
+      debugPrint('Failed to stop audio: $error');
+    }
   }
 }

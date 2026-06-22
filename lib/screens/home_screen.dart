@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/task.dart';
@@ -7,14 +9,74 @@ import 'add_task_screen.dart';
 import 'incoming_call_screen.dart';
 import 'voicemail_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  Timer? _clock;
+  bool _openingCall = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _tick();
+  }
+
+  Future<void> _tick() async {
+    if (!mounted) return;
+    setState(() {});
+
+    final isHomeVisible = ModalRoute.of(context)?.isCurrent ?? false;
+    if (!isHomeVisible || _openingCall) return;
+
+    Task? dueTask;
+    for (final task in appState.tasks) {
+      if (task.isOverdue && !task.done && !task.hasCalled) {
+        dueTask = task;
+        break;
+      }
+    }
+    if (dueTask == null) return;
+
+    final taskToCall = dueTask;
+    final navigator = Navigator.of(context);
+    _openingCall = true;
+    try {
+      final claimed = await appState.claimCall(taskToCall.id);
+      if (!claimed || !mounted || !navigator.mounted) return;
+
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (_) => IncomingCallScreen(task: taskToCall),
+        ),
+      );
+    } finally {
+      _openingCall = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _clock?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('鬼詰めToDo'),
+        title: const Text('Todoリスト'),
         actions: [_voicemailAction(context)],
       ),
       body: ListenableBuilder(
@@ -121,14 +183,6 @@ class _TaskTile extends StatelessWidget {
             _statusChip(overdue, done),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.phone_in_talk),
-          color: overdue ? const Color(0xFFE5484D) : Colors.white38,
-          tooltip: '今すぐ着信（デバッグ）',
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => IncomingCallScreen(task: task)),
-          ),
-        ),
       ),
     );
   }
@@ -166,8 +220,7 @@ class _Banner extends StatelessWidget {
       color: const Color(0xFF1A1F29),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: const Text(
-        '期限を過ぎると、誰かから進捗確認の着信があります。'
-        '📞アイコンで今すぐ試せます。',
+        '期限を過ぎると、誰かから進捗確認の着信があります。',
         style: TextStyle(color: Colors.white54, fontSize: 12),
       ),
     );

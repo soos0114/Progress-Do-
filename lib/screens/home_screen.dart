@@ -55,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final claimed = await appState.claimCall(taskToCall.id);
       if (!claimed || !mounted || !navigator.mounted) return;
 
+      await appState.removeCompletedTasks();
+      if (!mounted || !navigator.mounted) return;
       await navigator.push(
         MaterialPageRoute(
           builder: (_) => IncomingCallScreen(task: taskToCall),
@@ -70,6 +72,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _clock?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Future<void> _openScreen(Widget screen) async {
+    final navigator = Navigator.of(context);
+    await appState.removeCompletedTasks();
+    if (!mounted || !navigator.mounted) return;
+    await navigator.push(MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
@@ -101,9 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AddTaskScreen()),
-        ),
+        onPressed: () => _openScreen(const AddTaskScreen()),
         icon: const Icon(Icons.add),
         label: const Text('タスク追加'),
       ),
@@ -119,9 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           IconButton(
             icon: const Icon(Icons.voicemail),
             tooltip: '留守電',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const VoicemailScreen()),
-            ),
+            onPressed: () => _openScreen(const VoicemailScreen()),
           ),
           if (appState.unheardVoicemailCount > 0)
             Positioned(

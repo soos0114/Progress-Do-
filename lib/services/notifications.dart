@@ -33,9 +33,8 @@ class Notifications {
     );
 
     // Android 13+ の通知許可をお願いする
-    final androidImpl =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
     await androidImpl?.requestNotificationsPermission();
     await androidImpl?.requestFullScreenIntentPermission();
     // Android 12+ の正確なアラーム許可（時刻ピッタリで鳴らすため）
@@ -94,6 +93,7 @@ class Notifications {
     final task = appState.taskById(taskId);
     if (task == null) return;
     if (!await appState.claimCall(taskId)) return;
+    await appState.removeCompletedTasks();
     navigatorKey.currentState?.push(
       MaterialPageRoute(builder: (_) => IncomingCallScreen(task: task)),
     );

@@ -54,6 +54,7 @@ class Task {
 /// 留守電1件（無視したときに残る）
 class Voicemail {
   final String id;
+  final String? taskId;
   final String taskTitle;
   final String characterId;
   final DateTime receivedAt;
@@ -61,14 +62,21 @@ class Voicemail {
 
   Voicemail({
     required this.id,
+    this.taskId,
     required this.taskTitle,
     required this.characterId,
     required this.receivedAt,
     this.heard = false,
   });
 
-  factory Voicemail.create(String taskTitle, String characterId) => Voicemail(
+  factory Voicemail.create(
+    String taskId,
+    String taskTitle,
+    String characterId,
+  ) =>
+      Voicemail(
         id: _genId(),
+        taskId: taskId,
         taskTitle: taskTitle,
         characterId: characterId,
         receivedAt: DateTime.now(),
@@ -76,6 +84,7 @@ class Voicemail {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'taskId': taskId,
         'taskTitle': taskTitle,
         'characterId': characterId,
         'receivedAt': receivedAt.toIso8601String(),
@@ -84,6 +93,7 @@ class Voicemail {
 
   factory Voicemail.fromJson(Map<String, dynamic> j) => Voicemail(
         id: j['id'] as String,
+        taskId: j['taskId'] as String?,
         taskTitle: j['taskTitle'] as String,
         characterId: (j['characterId'] as String?) ?? 'committee',
         receivedAt: DateTime.parse(j['receivedAt'] as String),

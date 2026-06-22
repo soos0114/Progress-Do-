@@ -21,11 +21,23 @@ class AppState extends ChangeNotifier {
 
   Future<void> load() async {
     final savedTasks = await _store.loadTasks();
+    final completedTasks = savedTasks.where((task) => task.done).toList();
     tasks = savedTasks.where((task) => !task.done).toList();
     if (tasks.length != savedTasks.length) {
       await _store.saveTasks(tasks);
     }
     voicemails = await _store.loadVoicemails();
+    if (completedTasks.isNotEmpty) {
+      final before = voicemails.length;
+      voicemails.removeWhere(
+        (voicemail) => completedTasks.any(
+          (task) => _belongsToTask(voicemail, task),
+        ),
+      );
+      if (voicemails.length != before) {
+        await _store.saveVoicemails(voicemails);
+      }
+    }
     notifyListeners();
   }
 
@@ -53,9 +65,31 @@ class AppState extends ChangeNotifier {
   Future<void> toggleDone(String id) async {
     final t = taskById(id);
     if (t == null) return;
-    tasks.remove(t);
+    t.done = !t.done;
+    if (t.done) {
+      voicemails.removeWhere((voicemail) => _belongsToTask(voicemail, t));
+    }
     notifyListeners();
-    await Notifications.cancelForTask(t);
+
+    if (t.done) {
+      await Notifications.cancelForTask(t);
+    } else if (t.due.isAfter(DateTime.now())) {
+      await Notifications.scheduleForTask(t);
+    }
+    await _store.saveTasks(tasks);
+    await _store.saveVoicemails(voicemails);
+  }
+
+  /// 完了表示は現在の画面に残し、次の画面へ移る直前に片付ける。
+  Future<void> removeCompletedTasks() async {
+    final completed = tasks.where((task) => task.done).toList();
+    if (completed.isEmpty) return;
+
+    tasks.removeWhere((task) => task.done);
+    notifyListeners();
+    for (final task in completed) {
+      await Notifications.cancelForTask(task);
+    }
     await _store.saveTasks(tasks);
   }
 
@@ -80,8 +114,12 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addVoicemail(String taskTitle, String characterId) async {
-    voicemails.insert(0, Voicemail.create(taskTitle, characterId));
+  Future<void> addVoicemail(
+    String taskId,
+    String taskTitle,
+    String characterId,
+  ) async {
+    voicemails.insert(0, Voicemail.create(taskId, taskTitle, characterId));
     await _store.saveVoicemails(voicemails);
     notifyListeners();
   }
@@ -102,5 +140,10 @@ class AppState extends ChangeNotifier {
 
   void _sortTasks() {
     tasks.sort((a, b) => a.due.compareTo(b.due));
+  }
+
+  bool _belongsToTask(Voicemail voicemail, Task task) {
+    if (voicemail.taskId != null) return voicemail.taskId == task.id;
+    return voicemail.taskTitle == task.title;
   }
 }

@@ -48,7 +48,11 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
 
   Future<void> _ignore() async {
     await Voice.stopAll();
-    await appState.addVoicemail(widget.task.title, _character.id);
+    await appState.addVoicemail(
+      widget.task.id,
+      widget.task.title,
+      _character.id,
+    );
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(

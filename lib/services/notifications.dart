@@ -63,6 +63,8 @@ class Notifications {
       when,
       const NotificationDetails(android: _androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: task.id,
     );
   }

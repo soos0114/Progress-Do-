@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/task.dart';
+import '../services/notifications.dart';
 import '../state/app_state.dart';
 import '../util/format.dart';
+import '../widgets/app_mark.dart';
 import 'add_task_screen.dart';
 import 'incoming_call_screen.dart';
 import 'voicemail_screen.dart';
@@ -38,6 +40,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     final isHomeVisible = ModalRoute.of(context)?.isCurrent ?? false;
     if (!isHomeVisible || _openingCall) return;
+
+    // 全画面着信を使えない端末では、予約済みの通常通知に任せる。
+    // ここで claimCall すると、表示直前の通知をキャンセルしてしまう。
+    if (!Notifications.canUseFullScreenIntent) return;
 
     Task? dueTask;
     for (final task in appState.tasks) {
@@ -85,7 +91,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todoリスト'),
+        titleSpacing: 0,
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppMark(size: 28),
+            SizedBox(width: 10),
+            Text('Progress-Do'),
+          ],
+        ),
         actions: [_voicemailAction(context)],
       ),
       body: ListenableBuilder(

@@ -18,7 +18,7 @@ class KizumeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '鬼詰めToDo',
+      title: 'Progress-Do',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData(

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -15,6 +18,10 @@ import '../screens/incoming_call_screen.dart';
 class Notifications {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  static const MethodChannel _permissionChannel =
+      MethodChannel('progress_do/notification_permissions');
+
+  static bool canUseFullScreenIntent = false;
 
   static const String _channelId = 'kizume_call';
   static const String _channelName = '進捗確認の着信';
@@ -36,23 +43,28 @@ class Notifications {
     final androidImpl = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     await androidImpl?.requestNotificationsPermission();
-    await androidImpl?.requestFullScreenIntentPermission();
     // Android 12+ の正確なアラーム許可（時刻ピッタリで鳴らすため）
     await androidImpl?.requestExactAlarmsPermission();
+
+    if (Platform.isAndroid) {
+      canUseFullScreenIntent = await _permissionChannel
+              .invokeMethod<bool>('canUseFullScreenIntent') ??
+          false;
+    }
   }
 
-  static const AndroidNotificationDetails _androidDetails =
+  static AndroidNotificationDetails get _androidDetails =>
       AndroidNotificationDetails(
-    _channelId,
-    _channelName,
-    channelDescription: '期限を過ぎたタスクの進捗確認',
-    importance: Importance.max,
-    priority: Priority.high,
-    category: AndroidNotificationCategory.call,
-    // ① に昇格するときは true（＋ USE_FULL_SCREEN_INTENT 権限）
-    fullScreenIntent: true,
-    ongoing: false,
-  );
+        _channelId,
+        _channelName,
+        channelDescription: '期限を過ぎたタスクの進捗確認',
+        importance: Importance.max,
+        priority: Priority.high,
+        category: AndroidNotificationCategory.call,
+        // 特別アクセスがない端末では通常の高優先度通知に戻す。
+        fullScreenIntent: canUseFullScreenIntent,
+        ongoing: false,
+      );
 
   static Future<void> scheduleForTask(Task task) async {
     final when = tz.TZDateTime.from(task.due, tz.local);
@@ -61,7 +73,7 @@ class Notifications {
       '📞 進捗確認担当',
       '「${task.title}」の件で着信があります',
       when,
-      const NotificationDetails(android: _androidDetails),
+      NotificationDetails(android: _androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,

@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 
 import '../data/script.dart';
 
@@ -11,7 +12,9 @@ class Voice {
     try {
       await _ring.setReleaseMode(ReleaseMode.loop);
       await _ring.play(AssetSource('audio/${CallScript.ringtoneFile}'));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('Failed to play ringtone: $error');
+    }
   }
 
   static Future<void> stopRing() async {
@@ -23,9 +26,11 @@ class Voice {
   static Future<void> speak(String fileName) async {
     try {
       await _speech.stop();
-      await _speech.setReleaseMode(ReleaseMode.loop);
+      await _speech.setReleaseMode(ReleaseMode.release);
       await _speech.play(AssetSource('audio/$fileName'));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('Failed to play voice clip "$fileName": $error');
+    }
   }
 
   static Future<void> stopAll() async {

@@ -40,10 +40,10 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     super.dispose();
   }
 
-  void _answer() {
-    Voice.stopRing();
-    Voice.speak(_character.answerAudioFile);
+  Future<void> _answer() async {
     setState(() => _phase = _Phase.talking);
+    await Voice.stopRing();
+    await Voice.speak(_character.answerAudioFile);
   }
 
   Future<void> _ignore() async {

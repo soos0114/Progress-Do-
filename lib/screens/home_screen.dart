@@ -20,6 +20,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _clock;
   bool _openingCall = false;
+  // lifecycleState は起動直後 null になり得るので、前面状態は自前で保持する
+  // （初期値は true ＝ HomeScreen 生成時点ではアプリは前面）。
+  bool _isForeground = true;
 
   @override
   void initState() {
@@ -30,7 +33,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _tick();
+    _isForeground = state == AppLifecycleState.resumed;
+    if (_isForeground) _tick();
   }
 
   Future<void> _tick() async {
@@ -43,9 +47,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // アプリが前面のときだけアプリ内で着信を出す（全画面着信の可否は問わない＝
     // 全画面通知OFFでも前面なら鳴る）。背景では着信を開かず、claimCall で予約通知を
     // キャンセルしないようにして、OS の通知に任せる。
-    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
-      return;
-    }
+    if (!_isForeground) return;
 
     Task? dueTask;
     for (final task in appState.tasks) {

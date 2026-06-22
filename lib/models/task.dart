@@ -51,25 +51,29 @@ class Task {
 class Voicemail {
   final String id;
   final String taskTitle;
+  final String characterId;
   final DateTime receivedAt;
   bool heard;
 
   Voicemail({
     required this.id,
     required this.taskTitle,
+    required this.characterId,
     required this.receivedAt,
     this.heard = false,
   });
 
-  factory Voicemail.create(String taskTitle) => Voicemail(
+  factory Voicemail.create(String taskTitle, String characterId) => Voicemail(
         id: _genId(),
         taskTitle: taskTitle,
+        characterId: characterId,
         receivedAt: DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'taskTitle': taskTitle,
+        'characterId': characterId,
         'receivedAt': receivedAt.toIso8601String(),
         'heard': heard,
       };
@@ -77,6 +81,7 @@ class Voicemail {
   factory Voicemail.fromJson(Map<String, dynamic> j) => Voicemail(
         id: j['id'] as String,
         taskTitle: j['taskTitle'] as String,
+        characterId: (j['characterId'] as String?) ?? 'committee',
         receivedAt: DateTime.parse(j['receivedAt'] as String),
         heard: (j['heard'] as bool?) ?? false,
       );

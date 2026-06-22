@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../data/script.dart';
 import '../models/task.dart';
 import '../state/app_state.dart';
 import '../util/format.dart';
@@ -32,8 +31,7 @@ class HomeScreen extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 96),
                         itemCount: tasks.length,
                         itemBuilder: (_, i) => _TaskTile(task: tasks[i]),
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1),
+                        separatorBuilder: (_, __) => const Divider(height: 1),
                       ),
               ),
             ],
@@ -71,8 +69,7 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(
                     color: Color(0xFFE5484D), shape: BoxShape.circle),
-                constraints:
-                    const BoxConstraints(minWidth: 18, minHeight: 18),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                 child: Text(
                   '${appState.unheardVoicemailCount}',
                   textAlign: TextAlign.center,
@@ -129,8 +126,7 @@ class _TaskTile extends StatelessWidget {
           color: overdue ? const Color(0xFFE5484D) : Colors.white38,
           tooltip: '今すぐ着信（デバッグ）',
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => IncomingCallScreen(task: task)),
+            MaterialPageRoute(builder: (_) => IncomingCallScreen(task: task)),
           ),
         ),
       ),
@@ -169,10 +165,10 @@ class _Banner extends StatelessWidget {
       width: double.infinity,
       color: const Color(0xFF1A1F29),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-      child: Text(
-        '期限を過ぎると${CallScript.callerName}から着信があります。'
+      child: const Text(
+        '期限を過ぎると、誰かから進捗確認の着信があります。'
         '📞アイコンで今すぐ試せます。',
-        style: const TextStyle(color: Colors.white54, fontSize: 12),
+        style: TextStyle(color: Colors.white54, fontSize: 12),
       ),
     );
   }

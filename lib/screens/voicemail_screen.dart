@@ -19,8 +19,8 @@ class VoicemailScreen extends StatelessWidget {
           final vms = appState.voicemails;
           if (vms.isEmpty) {
             return const Center(
-              child: Text('留守電はありません。',
-                  style: TextStyle(color: Colors.white38)),
+              child:
+                  Text('留守電はありません。', style: TextStyle(color: Colors.white38)),
             );
           }
           return ListView.separated(
@@ -46,10 +46,11 @@ class _VoicemailTileState extends State<_VoicemailTile> {
   bool _open = false;
 
   void _toggle() {
+    final character = CallScript.characterById(widget.vm.characterId);
     setState(() => _open = !_open);
     if (_open) {
       appState.markVoicemailHeard(widget.vm.id);
-      Voice.speak(CallScript.voicemailAudioFile);
+      Voice.speak(character.voicemailAudioFile);
     } else {
       Voice.stopAll();
     }
@@ -58,6 +59,7 @@ class _VoicemailTileState extends State<_VoicemailTile> {
   @override
   Widget build(BuildContext context) {
     final vm = widget.vm;
+    final character = CallScript.characterById(vm.characterId);
     return Column(
       children: [
         ListTile(
@@ -65,12 +67,18 @@ class _VoicemailTileState extends State<_VoicemailTile> {
             backgroundColor: vm.heard
                 ? Colors.white12
                 : const Color(0xFFE5484D).withOpacity(0.25),
-            child: const Icon(Icons.support_agent, color: Colors.white70),
+            child: Icon(
+              character.id == 'entity'
+                  ? Icons.blur_circular
+                  : character.id == 'mother'
+                      ? Icons.face_3
+                      : Icons.support_agent,
+              color: Colors.white70,
+            ),
           ),
-          title: Text(CallScript.callerName,
+          title: Text(character.name,
               style: TextStyle(
-                  fontWeight:
-                      vm.heard ? FontWeight.normal : FontWeight.bold)),
+                  fontWeight: vm.heard ? FontWeight.normal : FontWeight.bold)),
           subtitle: Text('「${vm.taskTitle}」  ・  ${fmtDateTime(vm.receivedAt)}'),
           trailing: Icon(_open ? Icons.stop_circle : Icons.play_circle_fill,
               color: Colors.white70),
@@ -82,7 +90,7 @@ class _VoicemailTileState extends State<_VoicemailTile> {
             color: Colors.white.withOpacity(0.04),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
             child: Text(
-              CallScript.voicemailLine(vm.taskTitle),
+              character.voicemailLine(vm.taskTitle),
               style: const TextStyle(height: 1.6, color: Colors.white70),
             ),
           ),

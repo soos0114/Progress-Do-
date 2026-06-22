@@ -18,13 +18,14 @@ class IncomingCallScreen extends StatefulWidget {
 class _IncomingCallScreenState extends State<IncomingCallScreen>
     with TickerProviderStateMixin {
   late final AnimationController _pulse;
+  late final CallCharacter _character;
   _Phase _phase = _Phase.ringing;
   String _closingText = '';
-  bool _ended = false;
 
   @override
   void initState() {
     super.initState();
+    _character = CallScript.randomCharacter();
     _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -41,13 +42,13 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
 
   void _answer() {
     Voice.stopRing();
-    Voice.speak(CallScript.answerAudioFile);
+    Voice.speak(_character.answerAudioFile);
     setState(() => _phase = _Phase.talking);
   }
 
   Future<void> _ignore() async {
     await Voice.stopAll();
-    await appState.addVoicemail(widget.task.title);
+    await appState.addVoicemail(widget.task.title, _character.id);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -56,7 +57,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   }
 
   void _reply(Reply r) {
-    Voice.speak(CallScript.voicemailAudioFile); // 締めも音声があれば流用
+    Voice.speak(r.audioFile);
     setState(() {
       _phase = _Phase.closing;
       _closingText = r.closing;
@@ -109,14 +110,18 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
         const SizedBox(height: 18),
         _avatar(),
         const SizedBox(height: 20),
-        Text(CallScript.callerName,
+        Text(_character.name,
+            textAlign: TextAlign.center,
             style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        Text(CallScript.callerOrg,
-            style: const TextStyle(color: Colors.white38, fontSize: 14)),
+        if (_character.org.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(_character.org,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white38, fontSize: 14)),
+        ],
       ],
     );
   }
@@ -134,23 +139,37 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
             alignment: Alignment.center,
             children: [
               if (ringing) ..._waves(t),
-              child!,
+              Opacity(
+                opacity: _character.id == 'entity'
+                    ? 0.4 + ((_pulse.value * 10) % 1) * 0.6
+                    : 1,
+                child: child,
+              ),
             ],
           );
         },
         child: Container(
           width: 108,
           height: 108,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [Color(0xFF3A4A63), Color(0xFF222B3A)],
+              colors: _character.id == 'entity'
+                  ? const [Color(0xFF8AFF80), Color(0xFF5B21B6)]
+                  : const [Color(0xFF3A4A63), Color(0xFF222B3A)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
-          child: const Icon(Icons.support_agent,
-              size: 56, color: Colors.white70),
+          child: Icon(
+            switch (_character.id) {
+              'entity' => Icons.blur_circular,
+              'mother' => Icons.face_3,
+              _ => Icons.support_agent,
+            },
+            size: 56,
+            color: Colors.white70,
+          ),
         ),
       ),
     );
@@ -186,7 +205,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       );
     }
     final text = _phase == _Phase.talking
-        ? CallScript.answerLine(widget.task.title)
+        ? _character.answerLine(widget.task.title)
         : _closingText;
     return Center(
       child: SingleChildScrollView(
@@ -202,9 +221,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
             child: Text(
               text,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  height: 1.6),
+                  color: Colors.white, fontSize: 17, height: 1.6),
             ),
           ),
         ),
@@ -237,7 +254,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final r in CallScript.replies) ...[
+            for (final r in _character.replies) ...[
               _replyButton(r),
               const SizedBox(height: 12),
             ],

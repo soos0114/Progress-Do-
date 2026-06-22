@@ -32,8 +32,7 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
-  int get unheardVoicemailCount =>
-      voicemails.where((v) => !v.heard).length;
+  int get unheardVoicemailCount => voicemails.where((v) => !v.heard).length;
 
   Future<void> addTask(String title, DateTime due) async {
     final t = Task.create(title.trim(), due);
@@ -68,8 +67,8 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addVoicemail(String taskTitle) async {
-    voicemails.insert(0, Voicemail.create(taskTitle));
+  Future<void> addVoicemail(String taskTitle, String characterId) async {
+    voicemails.insert(0, Voicemail.create(taskTitle, characterId));
     await _store.saveVoicemails(voicemails);
     notifyListeners();
   }

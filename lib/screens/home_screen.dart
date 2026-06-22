@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/task.dart';
-import '../services/notifications.dart';
 import '../state/app_state.dart';
 import '../util/format.dart';
 import '../widgets/app_mark.dart';
@@ -41,9 +40,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final isHomeVisible = ModalRoute.of(context)?.isCurrent ?? false;
     if (!isHomeVisible || _openingCall) return;
 
-    // 全画面着信を使えない端末では、予約済みの通常通知に任せる。
-    // ここで claimCall すると、表示直前の通知をキャンセルしてしまう。
-    if (!Notifications.canUseFullScreenIntent) return;
+    // アプリが前面のときだけアプリ内で着信を出す（全画面着信の可否は問わない＝
+    // 全画面通知OFFでも前面なら鳴る）。背景では着信を開かず、claimCall で予約通知を
+    // キャンセルしないようにして、OS の通知に任せる。
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
 
     Task? dueTask;
     for (final task in appState.tasks) {

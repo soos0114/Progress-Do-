@@ -1,0 +1,28 @@
+name: kizume_todo
+description: "鬼詰めToDo — 期限切れ後が本編のTODOアプリ"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ローカル保存
+  shared_preferences: ^2.2.3
+  # 期限切れ → 通知（②方式：通知タップで着信画面へ）
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  # ElevenLabs事前生成音声の再生（asset。無ければテキストにフォールバック）
+  audioplayers: ^6.1.0
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # ここに ElevenLabs で生成した mp3 を入れる（無くても動く＝テキスト読み上げ無しで進行）
+    - assets/audio/

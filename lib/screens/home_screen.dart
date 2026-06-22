@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           children: [
             AppMark(size: 28),
             SizedBox(width: 10),
-            Text('Progress-Do'),
+            Text('TodoList'),
           ],
         ),
         actions: [_voicemailAction(context)],
